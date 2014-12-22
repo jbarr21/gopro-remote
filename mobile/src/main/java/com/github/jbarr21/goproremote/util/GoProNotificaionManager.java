@@ -76,6 +76,10 @@ public class GoProNotificaionManager {
         mNotificationManager.notify(NOTIFY_ID_TWO, n1);
     }
 
+    public void hideStartNotification() {
+        mNotificationManager.cancel(NOTIFY_ID_ZERO);
+    }
+
     public void showPhotoNotificaion() {
         mNotificationManager.cancel(NOTIFY_ID_TWO);
 

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="appPrimary">#263238</color>
+    <color name="appPrimaryDark">#21272b</color>
+    <color name="appTextColorPrimary">#ffffff</color>
+    <color name="appWindowBackground">#ffffff</color>
+    <color name="appColorAccent">#009587</color>
+
+    <color name="fab_normal">@color/appColorAccent</color>
+    <color name="fab_pressed">#008175</color>
+    <color name="fab_ripple">#007166</color>
+
+    <color name="header_title_text">#009688</color>
+
+    <color name="dividerColor">#e1e1e1</color>
+
+    <color name="dialog_list_item_title">#333333</color>
+</resources>
