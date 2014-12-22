@@ -11,7 +11,7 @@ import com.github.jbarr21.goproremote.common.Constants;
 import com.github.jbarr21.goproremote.receiver.GoProNotificationCmdReceiver;
 import com.github.jbarr21.goproremote.R;
 
-public class GoProNotificaionManager {
+public class GoProNotificationManager {
 
     private static final String GROUP_ID = "goProGroup";
 
@@ -19,19 +19,19 @@ public class GoProNotificaionManager {
     private static final int NOTIFY_ID_ONE = 1;
     private static final int NOTIFY_ID_TWO = 2;
 
-    private static GoProNotificaionManager instance;
+    private static GoProNotificationManager instance;
 
     private final Context appContext;
     private final NotificationManagerCompat mNotificationManager;
 
-    private GoProNotificaionManager(final Context context) {
+    private GoProNotificationManager(final Context context) {
         appContext = context.getApplicationContext();
         mNotificationManager = NotificationManagerCompat.from(context);
     }
 
-    public static GoProNotificaionManager from(final Context context) {
+    public static GoProNotificationManager from(final Context context) {
         if (instance == null) {
-            instance = new GoProNotificaionManager(context);
+            instance = new GoProNotificationManager(context);
         }
         return instance;
     }

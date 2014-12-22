@@ -40,6 +40,7 @@ dependencies {
     compile 'com.marvinlabs:android-floatinglabel-widgets:1.5.+@aar'
     compile 'com.melnykov:floatingactionbutton:1.1.+'
     compile 'com.nispok:snackbar:2.6.+'
+    compile 'io.reactivex:rxandroid:0.23.+'
 
     compile 'com.squareup.okhttp:okhttp:2.1.+'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.1.+'
