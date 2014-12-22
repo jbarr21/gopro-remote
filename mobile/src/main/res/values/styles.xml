@@ -1,8 +1,30 @@
 <resources>
-
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light">
-        <!-- Customize your theme here. -->
+    <style name="ToolbarTitleTextAppearance" parent="Base.TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
+    <style name="SettingsItemContainer">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/settings_item_height</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">@dimen/settings_item_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/settings_item_padding_horizontal</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <style name="SettingsItemLabel">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#222222</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="SettingsItemValue">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#717171</item>
+        <item name="android:textSize">14sp</item>
+    </style>
 </resources>
