@@ -63,28 +63,38 @@
             android:textColor="@color/header_title_text"
             android:textStyle="bold" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <RadioGroup
+            android:id="@+id/mode"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/field_margin"
-            android:orientation="horizontal">
+            android:checkedButton="@+id/mode_video">
 
-            <Button
-                android:id="@+id/mode_photo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/notification_title_photo"
-                android:enabled="false"/>
-
-            <Button
+            <RadioButton
                 android:id="@+id/mode_video"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/field_margin"
-                android:text="@string/notification_title_video"
-                android:enabled="false"/>
+                android:text="@string/video"/>
 
-        </LinearLayout>
+            <RadioButton
+                android:id="@+id/mode_photo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/photo"/>
+
+            <RadioButton
+                android:id="@+id/mode_burst"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/burst"/>
+
+            <RadioButton
+                android:id="@+id/mode_timelapse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/timelapse"/>
+
+        </RadioGroup>
 
     </LinearLayout>
 

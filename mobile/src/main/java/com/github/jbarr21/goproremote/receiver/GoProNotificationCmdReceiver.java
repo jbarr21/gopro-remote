@@ -8,11 +8,8 @@ import android.widget.Toast;
 import com.github.jbarr21.goproremote.api.Apis;
 import com.github.jbarr21.goproremote.api.GoProApi;
 import com.github.jbarr21.goproremote.common.Constants;
-import com.github.jbarr21.goproremote.util.GoProNotificaionManager;
+import com.github.jbarr21.goproremote.util.GoProNotificationManager;
 
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 import timber.log.Timber;
 
 public class GoProNotificationCmdReceiver extends BroadcastReceiver {
@@ -31,7 +28,7 @@ public class GoProNotificationCmdReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
         final GoProApi goProApi = Apis.getGoProApi();
-        final GoProNotificaionManager notificaionManager = GoProNotificaionManager.from(context);
+        final GoProNotificationManager notificaionManager = GoProNotificationManager.from(context);
 
         final int type = intent.getExtras().getInt(TYPE);
         switch (type) {
@@ -42,11 +39,11 @@ public class GoProNotificationCmdReceiver extends BroadcastReceiver {
                 final int mode = intent.getExtras().getInt(EXTRA_MODE);
                 switch (mode) {
                     case Constants.SWITCH_TO_PHOTO:
-                        goProApi.setPhotoMode(goProApiCallback);
+                        goProApi.setPhotoMode().subscribe();
                         notificaionManager.showPhotoNotificaion();
                         break;
                     case Constants.SWITCH_TO_VIDEO:
-                        goProApi.setVideoMode(goProApiCallback);
+                        goProApi.setVideoMode().subscribe();
                         notificaionManager.showVideoNotificaion();
                         break;
                     case DEFAULT_NOTIFICAION:
@@ -60,19 +57,19 @@ public class GoProNotificationCmdReceiver extends BroadcastReceiver {
                 final int action = intent.getExtras().getInt(EXTRA_ACTION);
                 switch (action) {
                     case Constants.TAKE_PHOTO:
-                        goProApi.takePhoto(goProApiCallback);
+                        goProApi.takePhoto().subscribe();
                         break;
                     case Constants.START_VIDEO:
-                        goProApi.startVideo(goProApiCallback);
+                        goProApi.startRecording().subscribe();
                         break;
                     case Constants.STOP_VIDEO:
-                        goProApi.stopVideo(goProApiCallback);
+                        goProApi.stopRecording().subscribe();
                         break;
                     case Constants.POWER_ON:
-                        goProApi.powerOn(goProApiCallback);
+                        goProApi.powerOn().subscribe();
                         break;
                     case Constants.POWER_OFF:
-                        goProApi.powerOff(goProApiCallback);
+                        goProApi.powerOff().subscribe();
                         break;
                     default:
                         Toast.makeText(context, "not supported", Toast.LENGTH_SHORT).show();
@@ -84,17 +81,4 @@ public class GoProNotificationCmdReceiver extends BroadcastReceiver {
                 break;
         }
     }
-
-    // Used to make the calls asynchronous
-    Callback<Response> goProApiCallback = new Callback<Response>() {
-        @Override
-        public void success(Response response, Response response2) {
-            // no op
-        }
-
-        @Override
-        public void failure(RetrofitError error) {
-            // no op
-        }
-    };
 }

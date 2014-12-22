@@ -27,6 +27,7 @@ public class HomeActivity extends ActionBarActivity {
         }
     }
 
+    // TODO: auto-connect to GoPro Wi-Fi
     private void connectToGoProWifi() {
         ConfigStorage configStorage = new ConfigStorage(this);
         String ssid = configStorage.getWifiSsid();

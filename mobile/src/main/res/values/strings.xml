@@ -6,8 +6,17 @@
     <string name="ssid">SSID</string>
     <string name="password">Password</string>
     <string name="mode">Mode</string>
-    <string name="photo">Photo</string>
     <string name="video">Video</string>
+    <string name="photo">Photo</string>
+    <string name="burst">Photo Burst</string>
+    <string name="timelapse">Time-Lapse</string>
+
+    <string-array name="modes">
+        <item>@string/video</item>
+        <item>@string/photo</item>
+        <item>@string/burst</item>
+        <item>@string/timelapse</item>
+    </string-array>
 
     <string name="hello_gopro_wear_remote">Hello GoPro Wear Remote!</string>
     <string name="action_settings">Settings</string>

@@ -1,29 +1,38 @@
 package com.github.jbarr21.goproremote.api;
 
-import retrofit.Callback;
 import retrofit.client.Response;
 import retrofit.http.GET;
+import rx.Observable;
 
 public interface GoProApi {
 
-    @GET("/bacpac/PW?t=p=%01")
-    void powerOn(Callback<Response> callback);
+    @GET("/bacpac/PW?p=%01")
+    Observable<Response> powerOn();
 
     @GET("/bacpac/PW?p=%00")
-    void powerOff(Callback<Response> callback);
+    Observable<Response> powerOff();
 
     @GET("/camera/CM?p=%00")
-    void setVideoMode(Callback<Response> callback);
+    Observable<Response> setVideoMode();
 
     @GET("/camera/CM?p=%01")
-    void setPhotoMode(Callback<Response> callback);
+    Observable<Response> setPhotoMode();
+
+    @GET("/camera/CM?p=%02")
+    Observable<Response> setBurstMode();
+
+    @GET("/camera/CM?p=%03")
+    Observable<Response> setTimelapseMode();
 
     @GET("/camera/SH?p=%01")
-    void startVideo(Callback<Response> callback);
+    Observable<Response> startRecording();
 
     @GET("/camera/SH?p=%00")
-    void stopVideo(Callback<Response> callback);
+    Observable<Response> stopRecording();
 
     @GET("/camera/SH?p=%01")
-    void takePhoto(Callback<Response> callback);
+    Observable<Response> takePhoto();
+
+    @GET("/camera/se")
+    Observable<Response> fetchCameraState();
 }
