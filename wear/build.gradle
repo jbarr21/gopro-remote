@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'com.github.ben-manes.versions'
 
 def versionMajor = Integer.parseInt(APP_VERSION_MAJOR)
 def versionMinor = Integer.parseInt(APP_VERSION_MINOR)
@@ -24,17 +26,29 @@ android {
                 output.outputFile = new File(file.parent, fileName)
             }
         }
+
+        proguardFiles 'proguard-rules.pro'
+        proguardFiles '../proguard/proguard-google-play-services.pro'
+        proguardFiles '../proguard/proguard-retrolambda.pro'
+        proguardFiles '../proguard/proguard-rx-java.pro'
+        proguardFiles '../proguard/proguard-timber.pro'
+        proguardFiles getDefaultProguardFile('proguard-android.txt')
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     buildTypes {
+        debug {
+            minifyEnabled Boolean.parseBoolean(MINIFY_ENABLED_DEBUG)
+            shrinkResources Boolean.parseBoolean(SHRINK_RESOURCES_DEBUG)
+        }
+
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled Boolean.parseBoolean(MINIFY_ENABLED_RELEASE)
+            shrinkResources Boolean.parseBoolean(SHRINK_RESOURCES_RELEASE)
         }
     }
 }

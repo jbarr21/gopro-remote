@@ -1,7 +1,11 @@
 package com.github.jbarr21.goproremote.fragment;
 
-import android.app.Activity;
 import android.content.Context;
+import android.content.IntentFilter;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -9,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -38,15 +43,16 @@ import com.twotoasters.servos.util.butterknife.EnabledSetter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.InjectViews;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
-import retrofit.client.Response;
-import rx.android.observables.AndroidObservable;
-import rx.functions.Action1;
+import rx.Subscription;
+import rx.android.app.AppObservable;
+import rx.android.content.ContentObservable;
 import timber.log.Timber;
 
 public class HomeFragment extends Fragment implements FloatingLabelEditText.EditTextListener {
@@ -61,8 +67,11 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
 
     private HashMap<Integer, GoProMode> radioButtonToModeMap;
 
+    private Context appContext;
     private GoProNotificationManager notificationManager;
+    private WifiManager wifiManager;
     private ConfigStorage configStorage;
+    private Subscription wifiChangedSubscription;
     private GoProApi goProApi;
     private GoProMode mode;
     private boolean isRecording;
@@ -78,9 +87,9 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        Context appContext = getActivity().getApplicationContext();
-
+        appContext = getActivity().getApplicationContext();
         notificationManager = GoProNotificationManager.from(appContext);
+        wifiManager = (WifiManager) appContext.getSystemService(Context.WIFI_SERVICE);
         configStorage = new ConfigStorage(appContext);
         goProApi = Apis.getGoProApi();
         mode = GoProMode.VIDEO;
@@ -88,7 +97,15 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
 
         setupViews((ActionBarActivity) getActivity());
         updateCameraCurrentState();
+
+        if (!isConnectedToGoProWifi()) {
+            connectToGoProWifi();
+        }
+
+        // TODO: move to show when WiFi connects and hide when disconnect
+        notificationManager.showStartNotification();
     }
+
 
     private void setupViews(@NonNull ActionBarActivity activity) {
         ButterKnife.inject(this, getView());
@@ -155,31 +172,80 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
     }
 
     private void updateCameraCurrentState() {
-        AndroidObservable.bindFragment(this, goProApi.fetchCameraState())
-                .subscribe(new Action1<Response>() {
-                    @Override
-                    public void call(Response response) {
-                        try {
-                            byte[] stateBytes = StreamUtils.streamToBytes(response.getBody().in());
-                            GoProState state = GoProState.from(stateBytes);
-                            updateNotificationUiNoAnim(true);
-                            selectMode(state.getCurrentMode());
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+        AppObservable.bindFragment(this, goProApi.fetchCameraState())
+                .subscribe(response -> {
+                    try {
+                        byte[] stateBytes = StreamUtils.streamToBytes(response.getBody().in());
+                        GoProState state = GoProState.from(stateBytes);
+                        updateNotificationUiNoAnim(true);
+                        selectMode(state.getCurrentMode());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
                     }
-                }, new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        updateNotificationUiNoAnim(false);
-                        Timber.e(throwable, "Error updating current camera state");
-                    }
+                }, throwable -> {
+                    updateNotificationUiNoAnim(false);
+                    Timber.e(throwable, "Error updating current camera state");
+                });
+    }
+
+    private boolean isConnectedToGoProWifi() {
+        if (wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED) {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            String ssid = wifiInfo != null ? wifiInfo.getSSID() : null;
+            return !TextUtils.isEmpty(ssid) && ssid.replaceAll("\"", "").equals(configStorage.getWifiSsid());
+        }
+        return false;
+    }
+
+    // TODO: auto-connect to GoPro Wi-Fi
+    private void connectToGoProWifi() {
+        subscribeWifiListener();
+        showSnackbar(Snackbar.with(appContext)
+                .text(String.format("Connecting to %s...", configStorage.getWifiSsid()))
+                .duration(SnackbarDuration.LENGTH_INDEFINITE));;
+
+        String ssid = configStorage.getWifiSsid();
+        String key = configStorage.getWifiPassword();
+
+        WifiConfiguration wifiConfig = new WifiConfiguration();
+        wifiConfig.SSID = String.format("\"%s\"", ssid);
+        wifiConfig.preSharedKey = String.format("\"%s\"", key);
+
+        //remember id
+        int netId = wifiManager.addNetwork(wifiConfig);
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(netId, true);
+        wifiManager.reconnect();
+    }
+
+    private void subscribeWifiListener() {
+        IntentFilter intentFilter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        wifiChangedSubscription = AppObservable.bindFragment(this, ContentObservable.fromBroadcast(appContext, intentFilter)
+                .filter(intent -> ((NetworkInfo) intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO)).isConnected())
+                .map(intent -> ((WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO)))
+                .filter(wifiInfo -> wifiInfo.getSSID().replaceAll("\"", "").equals(configStorage.getWifiSsid()))
+                .timeout(10, TimeUnit.SECONDS))
+                .subscribe(intent -> {
+                    showSnackbar(Snackbar.with(appContext)
+                            .text(String.format("Connected to %s", configStorage.getWifiSsid()))
+                            .duration(SnackbarDuration.LENGTH_SHORT));
+                }, throwable -> {
+                    showSnackbar(Snackbar.with(appContext)
+                            .text("Could not connect to GoPro Wi-Fi")
+                            .actionLabel("Retry")
+                            .actionColorResource(android.R.color.holo_red_light)
+                            .actionListener(snackbar -> connectToGoProWifi())
+                            .swipeToDismiss(false)
+                            .duration(SnackbarDuration.LENGTH_INDEFINITE));
                 });
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (wifiChangedSubscription != null && !wifiChangedSubscription.isUnsubscribed()) {
+            wifiChangedSubscription.unsubscribe();
+        }
         ButterKnife.reset(this);
     }
 
@@ -209,10 +275,8 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
         }
 
         if (enabled) {
-            notificationManager.showStartNotification();
             fab.show(animate);
         } else {
-            notificationManager.hideStartNotification();
             fab.hide(animate);
         }
     }
@@ -251,15 +315,15 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
                 isRecording = !isRecording;
                 if (isRecording) {
                     goProApi.startRecording().subscribe(); // TODO: rollback mode based on callback failure
-                    showSnackbar("Started recording");
+                    showSnackbar(newSnackbar("Started recording"));
                 } else {
                     goProApi.stopRecording().subscribe();
-                    showSnackbar("Stopped recording");
+                    showSnackbar(newSnackbar("Stopped recording"));
                 }
                 break;
             case PHOTO:
                 goProApi.takePhoto().subscribe();
-                showSnackbar("Took picture");
+                showSnackbar(newSnackbar("Took picture"));
                 break;
             // TODO: impl others
         }
@@ -268,26 +332,30 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
 
     private void updateFabIcon() {
         int resId;
-        switch (mode) {
-            case VIDEO:     resId = isRecording ? R.drawable.ic_stop_white_24dp : R.drawable.ic_videocam_white_24dp; break;
-            case PHOTO:     // fall through
-            case BURST:     // fall through
-            case TIMELAPSE: resId = R.drawable.ic_photo_camera_white_24dp; break;
-            default: return;
+        if (isRecording) {
+            resId = R.drawable.ic_stop_white_24dp;
+        } else {
+            switch (mode) {
+                case VIDEO: resId = R.drawable.ic_videocam_white_24dp; break;
+                case PHOTO: resId = R.drawable.ic_photo_camera_white_24dp; break;
+                case BURST: resId = R.drawable.ic_photo_library_white_24dp; break;
+                case TIMELAPSE: resId = R.drawable.ic_timer_white_24dp; break;
+                default: return;
+            }
         }
         fab.setImageResource(resId);
     }
 
-    private void showSnackbar(CharSequence text) {
+    private void showSnackbar(Snackbar snackbar) {
         if (getActivity() != null) {
-            SnackbarManager.show(newSnackbar(getActivity(), text));
+            SnackbarManager.show(snackbar, getActivity());
         }
     }
 
-    private Snackbar newSnackbar(@NonNull Activity activity, @NonNull CharSequence text) {
-        return Snackbar.with(activity)
+    private Snackbar newSnackbar(@NonNull CharSequence text) {
+        return Snackbar.with(appContext)
                 .duration(SnackbarDuration.LENGTH_SHORT)
-                .eventListener(new SnackbarEventListener(activity, fab))
+                .eventListener(new SnackbarEventListener(appContext, fab))
                 .text(text);
     }
 }

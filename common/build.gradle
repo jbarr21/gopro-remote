@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'com.github.ben-manes.versions'
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
@@ -21,10 +23,7 @@ android {
 dependencies {
     compile 'com.android.support:support-annotations:21.0.+'
     compile 'com.google.android.gms:play-services-wearable:6.5.+'
-    compile 'com.google.code.gson:gson:2.3'
-    compile 'com.jakewharton:butterknife:6.+'
     compile 'com.jakewharton.timber:timber:2.5.+'
     compile 'com.twotoasters.servos:util:0.0.1-SNAPSHOT'
     compile 'com.twotoasters.servos:util-butterknife:0.0.1-SNAPSHOT'
-
 }

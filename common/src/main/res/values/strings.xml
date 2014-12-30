@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GoPro Remote</string>
+    <string name="wifi_settings">Wi-Fi Settings</string>
+    <string name="ssid">SSID</string>
+    <string name="password">Password</string>
+    <string name="mode">Mode</string>
+    <string name="video">Video</string>
+    <string name="photo">Photo</string>
+    <string name="burst">Photo Burst</string>
+    <string name="timelapse">Time-Lapse</string>
+
+    <string-array name="modes">
+        <item>@string/video</item>
+        <item>@string/photo</item>
+        <item>@string/burst</item>
+        <item>@string/timelapse</item>
+    </string-array>
+
+</resources>
