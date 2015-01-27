@@ -3,7 +3,6 @@ package com.github.jbarr21.goproremote.fragment;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -13,7 +12,6 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,11 +25,13 @@ import android.widget.RadioGroup;
 import com.github.jbarr21.goproremote.R;
 import com.github.jbarr21.goproremote.api.Apis;
 import com.github.jbarr21.goproremote.api.GoProApi;
+import com.github.jbarr21.goproremote.common.GoProMode;
 import com.github.jbarr21.goproremote.data.ConfigStorage;
-import com.github.jbarr21.goproremote.data.GoProMode;
-import com.github.jbarr21.goproremote.data.GoProState;
+import com.github.jbarr21.goproremote.common.GoProState;
 import com.github.jbarr21.goproremote.util.GoProNotificationManager;
+import com.github.jbarr21.goproremote.util.GoProUtils;
 import com.github.jbarr21.goproremote.util.SnackbarEventListener;
+import com.github.jbarr21.goproremote.util.WifiUtils;
 import com.marvinlabs.widget.floatinglabel.edittext.FloatingLabelEditText;
 import com.melnykov.fab.FloatingActionButton;
 import com.nispok.snackbar.Snackbar;
@@ -53,9 +53,13 @@ import butterknife.OnClick;
 import rx.Subscription;
 import rx.android.app.AppObservable;
 import rx.android.content.ContentObservable;
+import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
 public class HomeFragment extends Fragment implements FloatingLabelEditText.EditTextListener {
+
+    private static final boolean ANIMATE = true;
+    private static final boolean DONT_ANIMATE = false;
 
     @InjectView(R.id.toolbar) Toolbar toolbar;
     @InjectView(R.id.notificationSwitch) SwitchCompat notificationSwitch;
@@ -69,7 +73,6 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
 
     private Context appContext;
     private GoProNotificationManager notificationManager;
-    private WifiManager wifiManager;
     private ConfigStorage configStorage;
     private Subscription wifiChangedSubscription;
     private GoProApi goProApi;
@@ -89,7 +92,6 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
         super.onActivityCreated(savedInstanceState);
         appContext = getActivity().getApplicationContext();
         notificationManager = GoProNotificationManager.from(appContext);
-        wifiManager = (WifiManager) appContext.getSystemService(Context.WIFI_SERVICE);
         configStorage = new ConfigStorage(appContext);
         goProApi = Apis.getGoProApi();
         mode = GoProMode.VIDEO;
@@ -98,12 +100,13 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
         setupViews((ActionBarActivity) getActivity());
         updateCameraCurrentState();
 
-        if (!isConnectedToGoProWifi()) {
+        if (!WifiUtils.isConnectedToGoProWifi(getActivity())) {
             connectToGoProWifi();
         }
 
         // TODO: move to show when WiFi connects and hide when disconnect
-        notificationManager.showStartNotification();
+        //notificationManager.showStartNotification();
+        // TODO: use messages to send to wearable to launch its own activity rather than starting notification
     }
 
 
@@ -116,7 +119,7 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
         passwordInput.setInputWidgetText(configStorage.getWifiPassword());
         passwordInput.setEditTextListener(this);
         setupDisclosePasswordButton();
-        updateNotificationUiNoAnim(false);
+        updatePowerToggle(false, DONT_ANIMATE);
     }
 
     private void buildRadioButtonToModeMap() {
@@ -172,50 +175,31 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
     }
 
     private void updateCameraCurrentState() {
-        AppObservable.bindFragment(this, goProApi.fetchCameraState())
+        AppObservable.bindFragment(this, GoProUtils.fetchCameraState(goProApi))
                 .subscribe(response -> {
                     try {
-                        byte[] stateBytes = StreamUtils.streamToBytes(response.getBody().in());
-                        GoProState state = GoProState.from(stateBytes);
-                        updateNotificationUiNoAnim(true);
-                        selectMode(state.getCurrentMode());
+                        GoProState state = GoProState.from(StreamUtils.streamToBytes(response.getBody().in()));
+                        Timber.d("GoPro state: %s", state.toString());
+                        updateUi(state, DONT_ANIMATE);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }, throwable -> {
-                    updateNotificationUiNoAnim(false);
+                    updateUi(null, DONT_ANIMATE);
                     Timber.e(throwable, "Error updating current camera state");
                 });
     }
 
-    private boolean isConnectedToGoProWifi() {
-        if (wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED) {
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-            String ssid = wifiInfo != null ? wifiInfo.getSSID() : null;
-            return !TextUtils.isEmpty(ssid) && ssid.replaceAll("\"", "").equals(configStorage.getWifiSsid());
-        }
-        return false;
-    }
-
     // TODO: auto-connect to GoPro Wi-Fi
     private void connectToGoProWifi() {
-        subscribeWifiListener();
         showSnackbar(Snackbar.with(appContext)
                 .text(String.format("Connecting to %s...", configStorage.getWifiSsid()))
                 .duration(SnackbarDuration.LENGTH_INDEFINITE));;
 
-        String ssid = configStorage.getWifiSsid();
-        String key = configStorage.getWifiPassword();
-
-        WifiConfiguration wifiConfig = new WifiConfiguration();
-        wifiConfig.SSID = String.format("\"%s\"", ssid);
-        wifiConfig.preSharedKey = String.format("\"%s\"", key);
-
-        //remember id
-        int netId = wifiManager.addNetwork(wifiConfig);
-        wifiManager.disconnect();
-        wifiManager.enableNetwork(netId, true);
-        wifiManager.reconnect();
+        subscribeWifiListener();
+        WifiUtils.addGoProWifiNetwork(appContext)
+                .subscribeOn(Schedulers.newThread())
+                .subscribe();
     }
 
     private void subscribeWifiListener() {
@@ -223,7 +207,7 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
         wifiChangedSubscription = AppObservable.bindFragment(this, ContentObservable.fromBroadcast(appContext, intentFilter)
                 .filter(intent -> ((NetworkInfo) intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO)).isConnected())
                 .map(intent -> ((WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO)))
-                .filter(wifiInfo -> wifiInfo.getSSID().replaceAll("\"", "").equals(configStorage.getWifiSsid()))
+                .filter(wifiInfo -> WifiUtils.ssidFromWifiInfo(wifiInfo).equals(configStorage.getWifiSsid()))
                 .timeout(10, TimeUnit.SECONDS))
                 .subscribe(intent -> {
                     showSnackbar(Snackbar.with(appContext)
@@ -252,7 +236,7 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
     @SuppressWarnings("unused")
     @OnCheckedChanged(R.id.notificationSwitch)
     public void onNotificationToggled(boolean isChecked) {
-        updateNotificationUiWithAnim(isChecked);
+        updatePowerToggle(isChecked, ANIMATE);
         if (isChecked) {
             goProApi.powerOn().subscribe(); // TODO: init default mode
         } else {
@@ -260,29 +244,33 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
         }
     }
 
-    private void updateNotificationUiNoAnim(boolean enabled) {
-        updateNotificationUi(enabled, false);
-    }
-
-    private void updateNotificationUiWithAnim(boolean enabled) {
-        updateNotificationUi(enabled, true);
-    }
-
-    private void updateNotificationUi(boolean enabled, boolean animate) {
-        ButterKnife.apply(modeButtons, new EnabledSetter(), enabled);
-        if (notificationSwitch.isChecked() != enabled) {
-            notificationSwitch.setChecked(enabled);
+    private void updatePowerToggle(boolean isPowerOn, boolean animate) {
+        ButterKnife.apply(modeButtons, new EnabledSetter(), isPowerOn);
+        if (notificationSwitch.isChecked() != isPowerOn) {
+            notificationSwitch.setChecked(isPowerOn);
         }
 
-        if (enabled) {
+        if (isPowerOn) {
             fab.show(animate);
         } else {
             fab.hide(animate);
         }
     }
 
-    public void selectMode(GoProMode mode) {
+    public void updateUi(GoProState state, boolean animate) {
+        if (state == null) state = GoProState.CAMERA_OFF;
+
+        if (state != GoProState.CAMERA_OFF) {
+            mode = state.getCurrentMode();
+            isRecording = state.isRecording();
+        } else {
+            mode = GoProMode.VIDEO;
+            isRecording = false;
+        }
+
+        updatePowerToggle(state.isPowerOn(), animate);
         ((RadioButton) modeGroup.getChildAt(mode.ordinal())).setChecked(true);
+        updateFabIcon();
     }
 
     @SuppressWarnings("unused")
@@ -291,9 +279,9 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
         mode = radioButtonToModeMap.get(modeGroup.getCheckedRadioButtonId());
         updateFabIcon();
         switch (mode) {
-            case VIDEO: goProApi.setVideoMode().subscribe(); break;
-            case PHOTO: goProApi.setPhotoMode().subscribe(); break;
-            case BURST: goProApi.setBurstMode().subscribe(); break;
+            case VIDEO:     goProApi.setVideoMode().subscribe(); break;
+            case PHOTO:     goProApi.setPhotoMode().subscribe(); break;
+            case BURST:     goProApi.setBurstMode().subscribe(); break;
             case TIMELAPSE: goProApi.setTimelapseMode().subscribe(); break;
         }
     }
@@ -310,22 +298,29 @@ public class HomeFragment extends Fragment implements FloatingLabelEditText.Edit
     @SuppressWarnings("unused")
     @OnClick(R.id.fab)
     public void onFabClicked(View view) {
+        // TODO: rollback mode based on callback failure
         switch (mode) {
-            case VIDEO:
+            case PHOTO:
+                goProApi.takePhoto().subscribe();
+                showSnackbar(newSnackbar("Took picture"));
+                break;
+
+            case BURST:
+                goProApi.startRecording().subscribe();
+                showSnackbar(newSnackbar("Triggered photo burst"));
+                break;
+
+            case VIDEO:     // fall through
+            case TIMELAPSE:
                 isRecording = !isRecording;
                 if (isRecording) {
-                    goProApi.startRecording().subscribe(); // TODO: rollback mode based on callback failure
+                    goProApi.startRecording().subscribe();
                     showSnackbar(newSnackbar("Started recording"));
                 } else {
                     goProApi.stopRecording().subscribe();
                     showSnackbar(newSnackbar("Stopped recording"));
                 }
                 break;
-            case PHOTO:
-                goProApi.takePhoto().subscribe();
-                showSnackbar(newSnackbar("Took picture"));
-                break;
-            // TODO: impl others
         }
         updateFabIcon();
     }

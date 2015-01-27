@@ -8,6 +8,7 @@ import com.squareup.okhttp.OkHttpClient;
 
 import java.net.CookieHandler;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
@@ -49,6 +50,7 @@ public final class Apis {
     public static OkHttpClient getOkHttpClient() {
         if (okHttpClient == null) {
             okHttpClient = new OkHttpClient();
+            okHttpClient.setConnectTimeout(5, TimeUnit.SECONDS);
             okHttpClient.setConnectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.CLEARTEXT));
             okHttpClient.setCookieHandler(CookieHandler.getDefault());
         }

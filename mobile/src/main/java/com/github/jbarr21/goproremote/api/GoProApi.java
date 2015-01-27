@@ -34,5 +34,8 @@ public interface GoProApi {
     Observable<Response> takePhoto();
 
     @GET("/camera/se")
-    Observable<Response> fetchCameraState();
+    Observable<Response> fetchCameraStateWhileOn();
+
+    @GET("/bacpac/se")
+    Observable<Response> fetchCameraStateWhileOff();
 }

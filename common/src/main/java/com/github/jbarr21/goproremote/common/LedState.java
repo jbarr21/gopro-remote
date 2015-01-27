@@ -1,4 +1,4 @@
-package com.github.jbarr21.goproremote.data;
+package com.github.jbarr21.goproremote.common;
 
 public enum LedState {
     NONE (0),

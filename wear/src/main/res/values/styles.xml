@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.Light">
+        <item name="android:windowBackground">@color/window_bg</item>
+    </style>
+    
+    <style name="AppTheme.Transparent">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="ControlQuadrantBackground">
+        <item name="android:layout_width">@dimen/control_quadrant_size</item>
+        <item name="android:layout_height">@dimen/control_quadrant_size</item>
+        <item name="android:background">@drawable/ripple</item>
+        <item name="android:stateListAnimator">@anim/raise</item>
+    </style>
+
+    <style name="ControlQuadrantIcon">
+        <item name="android:layout_width">@dimen/control_quadrant_icon_size</item>
+        <item name="android:layout_height">@dimen/control_quadrant_icon_size</item>
+        <item name="android:layout_margin">@dimen/control_quadrant_icon_margin</item>
+    </style>
+</resources>
