@@ -1,0 +1,17 @@
+<resources>
+    <dimen name="wl_item_height">65dp</dimen>
+    <dimen name="wl_circle_size">36dp</dimen>
+    <dimen name="wl_circle_radius">18dp</dimen>
+    <dimen name="wl_circle_margin_horizontal">18dp</dimen>
+
+    <dimen name="page_row_margin">0dp</dimen><!--<dimen name="page_row_margin">100dp</dimen>-->
+    <dimen name="page_column_margin">0dp</dimen><!--<dimen name="page_column_margin">10dp</dimen>-->
+    <dimen name="page_column_margin_round">0dp</dimen><!--<dimen name="page_column_margin_round">50dp</dimen>-->
+
+    <dimen name="touch_raise">16dp</dimen>
+
+    <dimen name="control_table_size">304dp</dimen>
+    <dimen name="control_quadrant_size">152dp</dimen>
+    <dimen name="control_quadrant_icon_size">48dp</dimen>
+    <dimen name="control_quadrant_icon_margin">14dp</dimen>
+</resources>

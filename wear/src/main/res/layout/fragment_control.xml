@@ -1,0 +1,60 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <GridLayout
+        android:layout_width="@dimen/control_table_size"
+        android:layout_height="@dimen/control_table_size"
+        android:layout_gravity="center"
+        android:rowCount="2"
+        android:columnCount="2"
+        android:rotation="45">
+
+        <!-- top -->
+        <Button
+            style="@style/ControlQuadrantBackground"
+            android:id="@id/powerOn"/>
+
+        <!-- right -->
+        <Button
+            style="@style/ControlQuadrantBackground"
+            android:id="@id/startRecording"/>
+
+        <!-- left -->
+        <Button
+            style="@style/ControlQuadrantBackground"
+            android:id="@id/stopRecording"/>
+
+        <!-- right -->
+        <Button
+            style="@style/ControlQuadrantBackground"
+            android:id="@id/powerOff"/>
+
+    </GridLayout>
+
+    <ImageView
+        style="@style/ControlQuadrantIcon"
+        android:layout_gravity="top|center_horizontal"
+        android:src="@drawable/ic_power_adjusted_white_48dp"
+        android:tint="@android:color/holo_green_dark"/>
+
+    <ImageView
+        style="@style/ControlQuadrantIcon"
+        android:layout_gravity="right|center_vertical"
+        android:padding="4dp"
+        android:src="@drawable/ic_videocam_white_48dp"
+        android:tint="@color/wear_notification_peek_action"/>
+
+    <ImageView
+        style="@style/ControlQuadrantIcon"
+        android:layout_gravity="bottom|center_horizontal"
+        android:src="@drawable/ic_power_adjusted_white_48dp"
+        android:tint="@android:color/holo_red_dark"/>
+
+    <ImageView
+        style="@style/ControlQuadrantIcon"
+        android:layout_gravity="left|center_vertical"
+        android:src="@drawable/ic_stop_white_48dp"
+        android:tint="#555555"/>
+
+</FrameLayout>

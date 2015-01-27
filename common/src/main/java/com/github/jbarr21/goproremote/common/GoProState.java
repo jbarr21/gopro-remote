@@ -1,4 +1,4 @@
-package com.github.jbarr21.goproremote.data;
+package com.github.jbarr21.goproremote.common;
 
 import java.util.Arrays;
 
@@ -41,6 +41,8 @@ import java.util.Arrays;
  */
 public class GoProState {
 
+    public static final GoProState CAMERA_OFF = new GoProStateOff();
+
     private static final int NO_SD_CARD = 255;
 
     private byte[] rawState;
@@ -58,6 +60,8 @@ public class GoProState {
     private int videoAvailableMinutes;
     private int videoCount;
     private boolean isRecording;
+
+    private GoProState() { }
 
     private GoProState(Builder builder) {
         rawState = builder.rawState;
@@ -78,25 +82,34 @@ public class GoProState {
     }
 
     public static GoProState from(byte[] bytes) {
-        return new Builder()
-                .rawState(bytes)
-                .currentMode(GoProMode.values()[bytes[1]])
-                .startupMode(GoProMode.values()[bytes[3]])
-                .recordingMinutes(bytes[13])
-                .recordingSeconds(bytes[14])
-                .beepVolume(bytes[16])
-                .ledState(LedState.values()[bytes[17]])
-                .batteryPercent(bytes[19])
-                .photosAvailable(toInt(bytes[21], bytes[22]))
-                .photoCount(toInt(bytes[23], bytes[24]))
-                .videoAvailableMinutes(toInt(bytes[25], bytes[26]))
-                .videoCount(toInt(bytes[27], bytes[28]))
-                .isRecording(bytes[29] > 0)
-                .build();
+        if (bytes.length > 30) {
+            // Camera is On
+            return new Builder()
+                    .rawState(bytes)
+                    .currentMode(GoProMode.values()[bytes[1]])
+                    .startupMode(GoProMode.values()[bytes[3]])
+                    .recordingMinutes(bytes[13])
+                    .recordingSeconds(bytes[14])
+                    .beepVolume(bytes[16])
+                    .ledState(LedState.values()[bytes[17]])
+                    .batteryPercent(bytes[19])
+                    .photosAvailable(toInt(bytes[21], bytes[22]))
+                    .photoCount(toInt(bytes[23], bytes[24]))
+                    .videoAvailableMinutes(toInt(bytes[25], bytes[26]))
+                    .videoCount(toInt(bytes[27], bytes[28]))
+                    .isRecording(bytes[29] > 0)
+                    .build();
+        } else {
+            return GoProState.CAMERA_OFF;
+        }
     }
 
     static int toInt(byte highByte, byte lowByte) {
         return highByte << 8 | lowByte;
+    }
+
+    public boolean isPowerOn() {
+        return this != CAMERA_OFF;
     }
 
     // TODO: confirm this or if just high-byte (of 2) must be 255
@@ -165,7 +178,7 @@ public class GoProState {
     }
 
     public boolean isRecording() {
-        return isRecording;
+        return isRecording && currentMode != GoProMode.BURST;
     }
 
     @Override
@@ -285,6 +298,17 @@ public class GoProState {
 
         public GoProState build() {
             return new GoProState(this);
+        }
+    }
+
+    private static class GoProStateOff extends GoProState {
+        private GoProStateOff() {
+            super(new Builder());
+        }
+
+        @Override
+        public GoProMode getCurrentMode() {
+            return GoProMode.VIDEO;
         }
     }
 }
