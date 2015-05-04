@@ -4,7 +4,9 @@ apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'com.tmiyamon.mdicons'
 
 mdicons {
-    pattern "(" + "((network_wifi|fullscreen)_white_48dp)" + "|(visibility_grey600_24dp)" + "|(videocam|photo_camera|photo_library|timelapse|timer|adjust|stop)_white_(24|48)dp" + ")"
+    pattern "(network_wifi|fullscreen)_white_48dp"
+    pattern "visibility_grey600_24dp"
+    pattern "(videocam|photo_camera|photo_library|timelapse|timer|adjust|stop)_white_(24|48)dp"
 }
 
 android {
