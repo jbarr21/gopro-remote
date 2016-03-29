@@ -2,6 +2,8 @@ package com.github.jbarr21.goproremote;
 
 import android.app.Application;
 
+import com.facebook.stetho.Stetho;
+
 import timber.log.Timber;
 import timber.log.Timber.DebugTree;
 
@@ -20,5 +22,6 @@ public class GoProRemoteApp extends Application {
         if (BuildConfig.DEBUG) {
             Timber.plant(new DebugTree());
         }
+        Stetho.initializeWithDefaults(this);
     }
 }

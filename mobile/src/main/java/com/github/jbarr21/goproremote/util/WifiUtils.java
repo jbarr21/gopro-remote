@@ -1,15 +1,29 @@
 package com.github.jbarr21.goproremote.util;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.github.jbarr21.goproremote.data.ConfigStorage;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+
 import rx.Observable;
+import rx.exceptions.Exceptions;
+import rx.functions.Func0;
+import rx.functions.Func1;
+import timber.log.Timber;
 
 public final class WifiUtils {
 
@@ -40,27 +54,46 @@ public final class WifiUtils {
 
     public static Observable<WifiConfiguration> addWifiNetwork(@NonNull Context context,
             String ssid, String password, SecurityType securityType, int priority) {
-        return Observable.create(subscriber -> {
+        return Observable.defer(() -> {
             try {
                 WifiConfiguration wifiConfig = new WifiConfiguration();
                 wifiConfig.SSID = String.format("\"%s\"", ssid);
                 wifiConfig.preSharedKey = String.format("\"%s\"", password);
                 wifiConfig.priority = clamp(priority, 0, WIFI_CONFIG_MAX_PRIORITY);
+                setNetworkValidatedFlag(wifiConfig);
 
                 setSecurityModes(wifiConfig, securityType);
 
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 int networkId = wifiManager.addNetwork(wifiConfig);
-                wifiManager.disconnect();
-                wifiManager.enableNetwork(networkId, true);
-                wifiManager.reconnect();
+                boolean isDisconnected = wifiManager.disconnect();
+                boolean isNewNetworkEnabled = wifiManager.enableNetwork(networkId, true);
+                boolean isReconnected = wifiManager.reconnect();
+                Timber.d("isDisconnected = %b, isNewNetworkEnabled = %b, isReconnected = %b", isDisconnected, isNewNetworkEnabled, isReconnected);
 
-                subscriber.onNext(wifiConfig);
-                subscriber.onCompleted();
+                return Observable.just(wifiConfig);
             } catch (Exception e) {
-                subscriber.onError(e);
+                return Observable.error(e);
             }
         });
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public static void setNetworkValidatedFlag(WifiConfiguration wifiConfig) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                Class<WifiConfiguration> clazz = WifiConfiguration.class;
+                Field validatedInternetAccess = clazz.getDeclaredField("validatedInternetAccess");
+                validatedInternetAccess.setAccessible(true);
+                validatedInternetAccess.set(wifiConfig, true);
+
+                Field numNoInternetAccessReports = clazz.getDeclaredField("numNoInternetAccessReports");
+                numNoInternetAccessReports.setAccessible(true);
+                numNoInternetAccessReports.set(wifiConfig, 0);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                Timber.e(e, "Failed to accept unvalidated Wi-Fi network");
+            }
+        }
     }
 
     private static void setSecurityModes(WifiConfiguration wifiConfig, SecurityType securityType) {
@@ -81,6 +114,11 @@ public final class WifiUtils {
                 wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
                 break;
         }
+    }
+
+    public static String ssidFromWifiChangedIntent(Intent intent) {
+        WifiInfo wifiInfo = intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+        return ssidFromWifiInfo(wifiInfo);
     }
 
     public static String ssidFromWifiInfo(WifiInfo info) {

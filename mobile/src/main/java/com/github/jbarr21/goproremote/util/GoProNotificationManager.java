@@ -39,7 +39,7 @@ public class GoProNotificationManager {
     public void showStartNotification() {
         // visible on the phone
         Notification summary = new NotificationCompat.Builder(appContext)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setAutoCancel(true)
                 .setContentTitle(appContext.getString(R.string.notification_title_gopro_device))
                 .setContentText(appContext.getString(R.string.notification_content_gopro_device))
@@ -50,7 +50,7 @@ public class GoProNotificationManager {
 
         // first notification on wear
         Notification mode = new NotificationCompat.Builder(appContext)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(appContext.getString(R.string.notification_title_gopro_wear_remote))
                 .setContentText(appContext.getString(
                         R.string.notification_content_gopro_wear))
@@ -63,7 +63,7 @@ public class GoProNotificationManager {
         mNotificationManager.notify(NOTIFY_ID_ONE, mode);
 
         Notification n1 = new NotificationCompat.Builder(appContext)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(appContext.getString(R.string.notification_title_more))
                 .setContentText(appContext.getString(R.string.notification_content_more))
                 .addAction(android.R.drawable.ic_lock_power_off, appContext.getString(R.string.gopro_action_on), getActionPendingIntent(Constants.POWER_ON))
@@ -84,7 +84,7 @@ public class GoProNotificationManager {
         mNotificationManager.cancel(NOTIFY_ID_TWO);
 
         Notification n1 = new NotificationCompat.Builder(appContext)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(appContext.getString(R.string.notification_title_photo))
                 .setContentText(appContext.getString(R.string.notification_content_photo))
                 .addAction(android.R.drawable.ic_menu_camera, appContext.getString(R.string.gopro_action_take_photo), getActionPendingIntent(Constants.TAKE_PHOTO))
@@ -102,7 +102,7 @@ public class GoProNotificationManager {
         mNotificationManager.cancel(NOTIFY_ID_TWO);
 
         Notification n1 = new NotificationCompat.Builder(appContext)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(appContext.getString(R.string.notification_title_video))
                 .setContentText(appContext.getString(
                         R.string.notification_title_content_video))

@@ -58,7 +58,7 @@ android {
 
 dependencies {
     compile project(':common')
-    compile 'com.github.castorflex.smoothprogressbar:library-circular:1.0.+@aar'
+    compile 'com.github.castorflex.smoothprogressbar:library-circular:1.0.2@aar'
 }
 
-apply from: 'https://raw.github.com/twotoasters/HelloAndroidStudio/master/gradle/keystore.gradle'
+//apply from: 'https://raw.github.com/twotoasters/HelloAndroidStudio/master/gradle/keystore.gradle'

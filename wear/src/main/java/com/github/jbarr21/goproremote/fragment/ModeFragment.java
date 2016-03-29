@@ -19,12 +19,12 @@ import com.github.jbarr21.goproremote.util.NavUtils;
 import com.github.jbarr21.goproremote.util.WearableHeaderScrollListener;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Bind;
 import timber.log.Timber;
 
 public class ModeFragment extends BaseFragment implements WearableListView.ClickListener {
 
-    @InjectView(R.id.list) WearableListView listView;
+    @Bind(R.id.list) WearableListView listView;
 
     private static GoProMode[] MODES = { GoProMode.VIDEO, GoProMode.PHOTO, GoProMode.BURST, GoProMode.TIMELAPSE };
 

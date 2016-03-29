@@ -13,7 +13,7 @@ import com.github.jbarr21.goproremote.adapter.ModeAdapter.ModeViewHolder;
 import com.github.jbarr21.goproremote.common.GoProMode;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Bind;
 
 public class ModeAdapter extends RecyclerView.Adapter<ModeViewHolder> {
 
@@ -41,14 +41,14 @@ public class ModeAdapter extends RecyclerView.Adapter<ModeViewHolder> {
     }
 
     public static class ModeViewHolder extends WearableListView.ViewHolder {
-        @InjectView(R.id.circle) CircledImageView circle;
-        @InjectView(R.id.label) TextView label;
+        @Bind(R.id.circle) CircledImageView circle;
+        @Bind(R.id.label) TextView label;
 
         public GoProMode mode;
 
         public ModeViewHolder(View view) {
             super(view);
-            ButterKnife.inject(this, view);
+            ButterKnife.bind(this, view);
         }
     }
 }

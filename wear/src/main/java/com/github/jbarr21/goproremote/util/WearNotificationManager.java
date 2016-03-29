@@ -71,7 +71,7 @@ public class WearNotificationManager {
         return new Notification.Builder(appContext)
                 .setContentTitle(title)
                 .setContentText(text)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setLocalOnly(true)
                 .setPriority(Notification.PRIORITY_MAX)
                 .setVibrate(new long[]{0, 50}) // Vibrate to bring card to top of stream
@@ -85,7 +85,7 @@ public class WearNotificationManager {
         return new Notification.Builder(appContext)
                 .setContentTitle(contentTitle)  // Current status and quick action icon
                 .setContentText(contentText)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setLocalOnly(true)
                 .setPriority(Notification.PRIORITY_MAX)
                 .setVibrate(new long[]{0, 50}) // Vibrate to bring card to top of stream
