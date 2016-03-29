@@ -35,7 +35,7 @@
     <ImageView
         style="@style/ControlQuadrantIcon"
         android:layout_gravity="top|center_horizontal"
-        android:src="@drawable/ic_power_adjusted_white_48dp"
+        android:src="@drawable/ic_power_settings_new_white_48dp"
         android:tint="@android:color/holo_green_dark"/>
 
     <ImageView
@@ -48,7 +48,7 @@
     <ImageView
         style="@style/ControlQuadrantIcon"
         android:layout_gravity="bottom|center_horizontal"
-        android:src="@drawable/ic_power_adjusted_white_48dp"
+        android:src="@drawable/ic_power_settings_new_white_48dp"
         android:tint="@android:color/holo_red_dark"/>
 
     <ImageView

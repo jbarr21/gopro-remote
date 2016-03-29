@@ -1,9 +1,9 @@
 package com.github.jbarr21.goproremote.common;
 
 public class GoProCommandResponse {
-    private long requestId;
-    private boolean success;
-    private String message;
+    private final long requestId;
+    private final boolean success;
+    private final String message;
 
     public GoProCommandResponse(long requestId, boolean success, String message){
         this.requestId = requestId;

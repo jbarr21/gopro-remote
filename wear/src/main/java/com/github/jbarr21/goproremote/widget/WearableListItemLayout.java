@@ -17,12 +17,12 @@ import com.github.jbarr21.goproremote.util.CircledImageViewColorEvaluator;
 import com.twotoasters.servos.util.anim.TextColorEvaluator;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Bind;
 
 public class WearableListItemLayout extends LinearLayout implements OnCenterProximityListener {
 
-    @InjectView(R.id.circle) CircledImageView circle;
-    @InjectView(R.id.label) TextView label;
+    @Bind(R.id.circle) CircledImageView circle;
+    @Bind(R.id.label) TextView label;
 
     // item's circle starts at non-center size and grows while item's label starts at half alpha and becomes opaque
     private static final float CIRCLE_SCALE_PCT = 0.40f;
@@ -52,7 +52,7 @@ public class WearableListItemLayout extends LinearLayout implements OnCenterProx
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        ButterKnife.inject(this);
+        ButterKnife.bind(this);
     }
 
     // OnCenterProximityListener

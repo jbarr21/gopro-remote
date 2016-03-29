@@ -1,41 +1,40 @@
 package com.github.jbarr21.goproremote.api;
 
-import retrofit.client.Response;
-import retrofit.http.GET;
+import retrofit2.http.GET;
 import rx.Observable;
 
 public interface GoProApi {
 
-    @GET("/bacpac/PW?p=%01")
-    Observable<Response> powerOn();
+    @GET("bacpac/PW?p=%01")
+    Observable<Object> powerOn();
 
-    @GET("/bacpac/PW?p=%00")
-    Observable<Response> powerOff();
+    @GET("bacpac/PW?p=%00")
+    Observable<Object> powerOff();
 
-    @GET("/camera/CM?p=%00")
-    Observable<Response> setVideoMode();
+    @GET("camera/CM?p=%00")
+    Observable<Object> setVideoMode();
 
-    @GET("/camera/CM?p=%01")
-    Observable<Response> setPhotoMode();
+    @GET("camera/CM?p=%01")
+    Observable<Object> setPhotoMode();
 
-    @GET("/camera/CM?p=%02")
-    Observable<Response> setBurstMode();
+    @GET("camera/CM?p=%02")
+    Observable<Object> setBurstMode();
 
-    @GET("/camera/CM?p=%03")
-    Observable<Response> setTimelapseMode();
+    @GET("camera/CM?p=%03")
+    Observable<Object> setTimelapseMode();
 
-    @GET("/camera/SH?p=%01")
-    Observable<Response> startRecording();
+    @GET("camera/SH?p=%01")
+    Observable<Object> startRecording();
 
-    @GET("/camera/SH?p=%00")
-    Observable<Response> stopRecording();
+    @GET("camera/SH?p=%00")
+    Observable<Object> stopRecording();
 
-    @GET("/camera/SH?p=%01")
-    Observable<Response> takePhoto();
+    @GET("camera/SH?p=%01")
+    Observable<Object> takePhoto();
 
-    @GET("/camera/se")
-    Observable<Response> fetchCameraStateWhileOn();
+    @GET("camera/se")
+    Observable<byte[]> fetchCameraStateWhileOn();
 
-    @GET("/bacpac/se")
-    Observable<Response> fetchCameraStateWhileOff();
+    @GET("bacpac/se")
+    Observable<byte[]> fetchCameraStateWhileOff();
 }

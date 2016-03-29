@@ -1,20 +1,20 @@
 package com.github.jbarr21.goproremote.api;
 
+import com.facebook.stetho.okhttp3.StethoInterceptor;
+import com.github.jbarr21.goproremote.BuildConfig;
 import com.github.jbarr21.goproremote.GoProRemoteApp;
 import com.github.jbarr21.goproremote.data.ConfigStorage;
-import com.google.gson.Gson;
-import com.squareup.okhttp.ConnectionSpec;
-import com.squareup.okhttp.OkHttpClient;
+import okhttp3.ConnectionSpec;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 
-import java.net.CookieHandler;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import retrofit.RestAdapter;
-import retrofit.RestAdapter.LogLevel;
-import retrofit.client.Client;
-import retrofit.client.OkClient;
-import retrofit.converter.GsonConverter;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public final class Apis {
 
@@ -27,33 +27,40 @@ public final class Apis {
 
     public static GoProApi getGoProApi() {
         if (goProApi == null) {
-            RestAdapter restAdapter = getRestAdapterBuilder(GO_PRO_ENDPOINT_URL).build();
-            goProApi = restAdapter.create(GoProApi.class);
+            goProApi = new Retrofit.Builder()
+                    .client(getOkHttpClient())
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                    .baseUrl(HttpUrl.parse(GO_PRO_ENDPOINT_URL))
+                    .build()
+                    .create(GoProApi.class);
         }
         return goProApi;
     }
 
-    private static RestAdapter.Builder getRestAdapterBuilder(final String endpointUrl) {
-        return new RestAdapter.Builder()
-                .setLogLevel(LogLevel.FULL)
-                .setConverter(new GsonConverter(new Gson()))
-                .setClient(getRetrofitClient())
-                .setEndpoint(endpointUrl);
-    }
-
-    private static Client getRetrofitClient() {
-        Client client = new OkClient(getOkHttpClient());
-        ConfigStorage configStorage = new ConfigStorage(GoProRemoteApp.getInstance());
-        return new PasswordRetrofitClient(client, configStorage);
-    }
-
     public static OkHttpClient getOkHttpClient() {
         if (okHttpClient == null) {
-            okHttpClient = new OkHttpClient();
-            okHttpClient.setConnectTimeout(5, TimeUnit.SECONDS);
-            okHttpClient.setConnectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.CLEARTEXT));
-            okHttpClient.setCookieHandler(CookieHandler.getDefault());
+            ConfigStorage configStorage = new ConfigStorage(GoProRemoteApp.getInstance());
+            PasswordSigningInterceptor signingInterceptor = new PasswordSigningInterceptor(configStorage);
+
+            HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+            loggingInterceptor.setLevel(BuildConfig.DEBUG ? HttpLoggingInterceptor.Level.HEADERS : HttpLoggingInterceptor.Level.NONE);
+
+            okHttpClient = new OkHttpClient.Builder()
+                    .connectTimeout(5, TimeUnit.SECONDS)
+                    .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.CLEARTEXT))
+                    //.cookieJar(CookieHandler.getDefault())
+                    .addInterceptor(signingInterceptor)
+                    .addInterceptor(loggingInterceptor)
+                    .addNetworkInterceptor(new StethoInterceptor())
+                    .build();
         }
         return okHttpClient;
+    }
+
+    public static void setOkHttpClient(OkHttpClient okHttpClient) {
+        Apis.okHttpClient = okHttpClient;
+        Apis.goProApi = null;
+        Apis.goProApi = getGoProApi();
     }
 }

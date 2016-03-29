@@ -16,7 +16,7 @@ import com.github.jbarr21.goproremote.R;
 
 import java.io.Serializable;
 
-import butterknife.InjectView;
+import butterknife.Bind;
 import butterknife.OnClick;
 
 public class WearActionFragment extends BaseFragment {
@@ -25,8 +25,8 @@ public class WearActionFragment extends BaseFragment {
     private static final String ARG_LABEL = "label";
     private static final String ARG_CLICK_LISTENER = "click_listener";
 
-    @InjectView(R.id.circle) CircledImageView circle;
-    @InjectView(R.id.label) TextView label;
+    @Bind(R.id.circle) CircledImageView circle;
+    @Bind(R.id.label) TextView label;
 
     private OnActionClickedListener listener;
 

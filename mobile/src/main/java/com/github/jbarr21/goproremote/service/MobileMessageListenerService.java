@@ -20,14 +20,12 @@ import com.google.android.gms.wearable.WearableListenerService;
 import com.google.gson.Gson;
 import com.twotoasters.servos.util.StreamUtils;
 
-import org.apache.http.HttpStatus;
-
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
-import retrofit.RetrofitError;
-import retrofit.client.Response;
+import retrofit2.adapter.rxjava.HttpException;
+import retrofit2.Response;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
@@ -78,7 +76,7 @@ public class MobileMessageListenerService extends WearableListenerService {
                             .subscribe(response -> Timber.d("success"), throwable -> Timber.e(throwable, "failure"));
                     break;
                 default:
-                    Observable<Response> commandObservable = createGoProCommandObservable(command);
+                    Observable<Object> commandObservable = createGoProCommandObservable(command);
                     if (commandObservable != null) {
                         commandObservable
                                 .delay(command == GoProCommand.POWER_ON || command == GoProCommand.POWER_OFF ? 5 : 1, TimeUnit.SECONDS)
@@ -101,7 +99,7 @@ public class MobileMessageListenerService extends WearableListenerService {
         }
     }
 
-    private Observable<Response> createGoProCommandObservable(GoProCommand command) {
+    private Observable<Object> createGoProCommandObservable(GoProCommand command) {
         switch (command) {
             case POWER_ON:          return goProApi.powerOn();
             case POWER_OFF:         return goProApi.powerOff();
@@ -116,12 +114,8 @@ public class MobileMessageListenerService extends WearableListenerService {
         }
     }
 
-    private GoProState cameraStateFromResponse(Response response) {
-        try {
-            return GoProState.from(StreamUtils.streamToBytes(response.getBody().in()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private GoProState cameraStateFromResponse(byte[] response) {
+        return GoProState.from(response);
     }
 
     private Observable<Boolean> confirmCameraState(GoProCommand command, GoProState cameraState) {
@@ -146,13 +140,12 @@ public class MobileMessageListenerService extends WearableListenerService {
     private String determineCause(Throwable throwable, GoProCommand command) {
         if (!WifiUtils.isConnectedToGoProWifi(this)) {
             return "Disconnected from GoPro";
-        } else if (throwable instanceof RetrofitError) {
-            RetrofitError retrofitError = (RetrofitError) throwable;
-            Response response = retrofitError.getResponse();
-            if (response != null && response.getStatus() == HttpStatus.SC_GONE) {
+        } else if (throwable instanceof SocketTimeoutException) {
+            return "Command timed out";
+        } else if (throwable instanceof HttpException) {
+            HttpException exception = (HttpException) throwable;
+            if (exception.code() == GoProUtils.HTTP_GONE) {
                 return "GoPro is powered off";
-            } else if (retrofitError.getCause() instanceof SocketTimeoutException) {
-                return "Command timed out";
             } else {
                 return command.getFailureMessage();
             }
