@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
+import rx.functions.Func0;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
@@ -31,21 +33,33 @@ public class MessageUtils {
 
     private MessageUtils() { }
 
-    public static Observable<Integer> sendGoProCommandMessage(@NonNull GoogleApiClient googleApiClient, GoProCommandRequest commandRequest) {
+    public static Observable<Integer> sendGoProCommandMessage(@NonNull final GoogleApiClient googleApiClient, final GoProCommandRequest commandRequest) {
         return connectGoogleApiClient(googleApiClient)
-                .flatMap(connectionResult -> fetchPeerId(googleApiClient))
-                .flatMap(peerId -> sendCommandRequest(googleApiClient, peerId, commandRequest))
+                .flatMap(new Func1<ConnectionResult, Observable<String>>() {
+                    @Override
+                    public Observable<String> call(ConnectionResult connectionResult) {
+                        return fetchPeerId(googleApiClient);
+                    }
+                })
+                .flatMap(new Func1<String, Observable<Integer>>() {
+                    @Override
+                    public Observable<Integer> call(String peerId) {
+                        return sendCommandRequest(googleApiClient, peerId, commandRequest);
+                    }
+                })
                 .subscribeOn(Schedulers.newThread());
     }
 
-    private static Observable<ConnectionResult> connectGoogleApiClient(GoogleApiClient googleApiClient) {
-        return Observable.create(subscriber -> {
-            Timber.d("connectGoogleApiClient - isOnMainThread? %b", Looper.myLooper() == Looper.getMainLooper());
-            ConnectionResult connectionResult = googleApiClient.blockingConnect(WEARABLE_CONN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-            if (connectionResult != null && connectionResult.isSuccess()) {
-                subscriber.onNext(connectionResult);
-            } else {
-                subscriber.onError(new ConnectException(connectionResult != null ? connectionResult.toString() : "Failed to connect to Google API client"));
+    private static Observable<ConnectionResult> connectGoogleApiClient(final GoogleApiClient googleApiClient) {
+        return Observable.defer(new Func0<Observable<ConnectionResult>>() {
+            @Override
+            public Observable<ConnectionResult> call() {
+                ConnectionResult connectionResult = googleApiClient.blockingConnect(WEARABLE_CONN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+                if (connectionResult != null && connectionResult.isSuccess()) {
+                    return Observable.just(connectionResult);
+                } else {
+                    return Observable.error(new ConnectException(connectionResult != null ? connectionResult.toString() : "Failed to connect to Google API client"));
+                }
             }
         });
     }
@@ -55,7 +69,7 @@ public class MessageUtils {
         List<Node> nodes = Wearable.NodeApi.getConnectedNodes(googleApiClient).await(WEARABLE_CONN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS).getNodes();
         return !ListUtils.isEmpty(nodes)
             ? Observable.just(nodes.get(0).getId())
-            : Observable.error(new IllegalStateException("Unable to fetch peer id"));
+            : Observable.<String>error(new IllegalStateException("Unable to fetch peer id"));
     }
 
     private static Observable<Integer> sendCommandRequest(GoogleApiClient googleApiClient, String peerId, GoProCommandRequest commandRequest) {
@@ -67,7 +81,7 @@ public class MessageUtils {
 
         return requestId != MessageApi.UNKNOWN_REQUEST_ID
                 ? Observable.just(requestId)
-                : Observable.error(new Exception("Unable to send command message"));
+                : Observable.<Integer>error(new Exception("Unable to send command message"));
     }
 
     public static Observable<Integer> sendGoProCommandResponse(GoogleApiClient googleApiClient, String peerId, GoProCommandResponse response) {
@@ -79,7 +93,7 @@ public class MessageUtils {
 
         return responseRequestId != MessageApi.UNKNOWN_REQUEST_ID
                 ? Observable.just(responseRequestId)
-                : Observable.error(new Exception("Unable to send command message"));
+                : Observable.<Integer>error(new Exception("Unable to send command message"));
     }
 
     public static void disconnectGoogleApiClient(GoogleApiClient googleApiClient) {

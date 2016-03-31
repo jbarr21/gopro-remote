@@ -1,10 +1,14 @@
 package com.github.jbarr21.goproremote.activity;
 
-import android.app.Activity;
+import android.app.AlarmManager;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.DotsPageIndicator;
 import android.support.wearable.view.GridViewPager;
+import android.view.View;
+import android.view.WindowInsets;
 
 import com.github.jbarr21.goproremote.R;
 import com.github.jbarr21.goproremote.adapter.GoProGridPagerAdapter;
@@ -14,7 +18,7 @@ import com.twotoasters.servos.util.otto.BusProvider;
 
 import butterknife.ButterKnife;
 
-public class PagerActivity extends Activity {
+public class PagerActivity extends WearableActivity {
 
     private GoProGridPagerAdapter adapter;
 
@@ -22,13 +26,17 @@ public class PagerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pager);
+        setAmbientEnabled();
         final Resources res = getResources();
         final GridViewPager pager = ButterKnife.findById(this, R.id.pager);
-        pager.setOnApplyWindowInsetsListener((view, insets) -> {
-            int rowMargin = res.getDimensionPixelOffset(R.dimen.page_row_margin);
-            int colMargin = res.getDimensionPixelOffset(insets.isRound() ? R.dimen.page_column_margin_round : R.dimen.page_column_margin);
-            pager.setPageMargins(rowMargin, colMargin);
-            return insets;
+        pager.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                int rowMargin = res.getDimensionPixelOffset(R.dimen.page_row_margin);
+                int colMargin = res.getDimensionPixelOffset(insets.isRound() ? R.dimen.page_column_margin_round : R.dimen.page_column_margin);
+                pager.setPageMargins(rowMargin, colMargin);
+                return insets;
+            }
         });
         adapter = new GoProGridPagerAdapter(this, getFragmentManager());
         pager.setAdapter(adapter);
@@ -68,6 +76,61 @@ public class PagerActivity extends Activity {
             adapter.setStatus(event.status);
             adapter.notifyDataSetChanged();
         }
+    }
+
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+        //refreshDisplayAndSetNextUpdate();
+    }
+
+    @Override
+    public void onExitAmbient() {
+        super.onExitAmbient();
+        //mAmbientStateAlarmManager.cancel(mAmbientStatePendingIntent);
+    }
+
+    @Override
+    public void onUpdateAmbient() {
+        super.onUpdateAmbient();
+        //refreshDisplayAndSetNextUpdate();
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        setIntent(intent);
+
+        // Described in the following section
+        //refreshDisplayAndSetNextUpdate();
+    }
+
+    private void refreshDisplayAndSetNextUpdate() {
+    /*
+        if (isAmbient()) {
+            // Implement data retrieval and update the screen for ambient mode
+        } else {
+            // Implement data retrieval and update the screen for interactive mode
+        }
+
+        long timeMs = System.currentTimeMillis();
+
+        // Schedule a new alarm
+        if (isAmbient()) {
+            // Calculate the next trigger time
+            long delayMs = AMBIENT_INTERVAL_MS - (timeMs % AMBIENT_INTERVAL_MS);
+            long triggerTimeMs = timeMs + delayMs;
+
+            mAmbientStateAlarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTimeMs,
+                    mAmbientStatePendingIntent);
+
+        } else {
+            // Calculate the next trigger time for interactive mode
+        }
+        */
     }
 
     public static class StatusChangedEvent {

@@ -99,7 +99,6 @@ public class HomeActivity extends AppCompatActivity {
 
         notificationManager = GoProNotificationManager.from(this);
         configStorage = new ConfigStorage(this);
-        goProApi = Apis.getGoProApi();
         mode = GoProMode.VIDEO;
         isRecording = false;
 
@@ -111,6 +110,7 @@ public class HomeActivity extends AppCompatActivity {
             connectToGoProWifi();
         }
 
+        goProApi = Apis.getGoProApi();
         updateCameraCurrentState();
 
         // TODO: move to show when WiFi connects and hide when disconnect
@@ -259,12 +259,16 @@ public class HomeActivity extends AppCompatActivity {
             goProApi.powerOn()
                     .onErrorResumeNext(throwable -> throwable instanceof HttpException && ((HttpException) throwable).code() == 403 ? Observable.<byte[]>empty() : Observable.error(throwable))
                     .compose(RxAndroidUtils.applyApiRequestSchedulers())
-                    .subscribe(); // TODO: init default mode
+                    .subscribe(
+                            it -> Timber.d("success"),
+                            e -> showSnackbar(newSnackbar("Failed to turn on GoPro"))); // TODO: init default mode
         } else {
             goProApi.powerOff()
                     .onErrorResumeNext(throwable -> throwable instanceof HttpException && ((HttpException) throwable).code() == 403 ? Observable.<byte[]>empty() : Observable.error(throwable))
                     .compose(RxAndroidUtils.applyApiRequestSchedulers())
-                    .subscribe();
+                    .subscribe(
+                            it -> Timber.d("success"),
+                            e -> showSnackbar(newSnackbar("Failed to turn off GoPro")));
         }
     }
 
@@ -311,7 +315,11 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (actionObservable != null) {
-            actionObservable.compose(RxAndroidUtils.applyApiRequestSchedulers()).subscribe();
+            actionObservable
+                    .compose(RxAndroidUtils.applyApiRequestSchedulers())
+                    .subscribe(
+                        it -> Timber.d("success"),
+                        e -> showSnackbar(newSnackbar("Failed to update mode")));
         }
     }
 
@@ -333,14 +341,18 @@ public class HomeActivity extends AppCompatActivity {
             case PHOTO:
                 goProApi.takePhoto()
                         .compose(RxAndroidUtils.applyApiRequestSchedulers())
-                        .subscribe();
+                        .subscribe(
+                                it -> Timber.d("success"),
+                                e -> showSnackbar(newSnackbar("Failed to take photo")));
                 showSnackbar(newSnackbar("Took picture"));
                 break;
 
             case BURST:
                 goProApi.startRecording()
                         .compose(RxAndroidUtils.applyApiRequestSchedulers())
-                        .subscribe();
+                        .subscribe(
+                                it -> Timber.d("success"),
+                                e -> showSnackbar(newSnackbar("Failed to take burst photos")));
                 showSnackbar(newSnackbar("Triggered photo burst"));
                 break;
 
@@ -350,12 +362,16 @@ public class HomeActivity extends AppCompatActivity {
                 if (isRecording) {
                     goProApi.startRecording()
                             .compose(RxAndroidUtils.applyApiRequestSchedulers())
-                            .subscribe();
+                            .subscribe(
+                                    it -> Timber.d("success"),
+                                    e -> showSnackbar(newSnackbar("Failed to stop video")));
                     showSnackbar(newSnackbar("Started recording"));
                 } else {
                     goProApi.stopRecording()
                             .compose(RxAndroidUtils.applyApiRequestSchedulers())
-                            .subscribe();
+                            .subscribe(
+                                    it -> Timber.d("success"),
+                                    e -> showSnackbar(newSnackbar("Failed to start video")));
                     showSnackbar(newSnackbar("Stopped recording"));
                 }
                 break;

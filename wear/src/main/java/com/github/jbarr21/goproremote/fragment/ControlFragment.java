@@ -16,6 +16,7 @@ import com.github.jbarr21.goproremote.util.NavUtils;
 import java.util.HashMap;
 
 import butterknife.OnClick;
+import rx.functions.Action1;
 import timber.log.Timber;
 
 public class ControlFragment extends BaseFragment {
@@ -38,22 +39,28 @@ public class ControlFragment extends BaseFragment {
     @SuppressWarnings("unused")
     @OnClick({ R.id.powerOn, R.id.startRecording, R.id.stopRecording, R.id.powerOff })
     public void onClickCommand(View view) {
-        GoProCommand command = COMMAND_MAP.get(view.getId());
-        GoProCommandRequest commandRequest = new GoProCommandRequest(command);
+        final GoProCommand command = COMMAND_MAP.get(view.getId());
+        final GoProCommandRequest commandRequest = new GoProCommandRequest(command);
         MessageUtils.sendGoProCommandMessage(googleApiClient, commandRequest)
-                .subscribe(requestId -> {
-                    Timber.d("sent message onNext - isOnMainThread? %b", Looper.myLooper() == Looper.getMainLooper());
-                    Timber.d("Sent GoPro command (%s) successfully", command.name());
-                    MessageUtils.disconnectGoogleApiClient(googleApiClient);
-                    if (getActivity() != null) {
-                        NavUtils.showProgressOrFailure(getActivity(), MessageUtils.SUCCESS, commandRequest.getId());
+                .subscribe(new Action1<Integer>() {
+                    @Override
+                    public void call(Integer requestId) {
+                        Timber.d("sent message onNext - isOnMainThread? %b", Looper.myLooper() == Looper.getMainLooper());
+                        Timber.d("Sent GoPro command (%s) successfully", command.name());
+                        MessageUtils.disconnectGoogleApiClient(googleApiClient);
+                        if (getActivity() != null) {
+                            NavUtils.showProgressOrFailure(getActivity(), MessageUtils.SUCCESS, commandRequest.getId());
+                        }
                     }
-                }, throwable -> {
-                    Timber.d("sent message onError - isOnMainThread? %b", Looper.myLooper() == Looper.getMainLooper());
-                    Timber.e(throwable, "Failed to send GoPro command: %s", command.name());
-                    MessageUtils.disconnectGoogleApiClient(googleApiClient);
-                    if (getActivity() != null) {
-                        NavUtils.showProgressOrFailure(getActivity(), MessageUtils.FAILURE, commandRequest.getId());
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        Timber.d("sent message onError - isOnMainThread? %b", Looper.myLooper() == Looper.getMainLooper());
+                        Timber.e(throwable, "Failed to send GoPro command: %s", command.name());
+                        MessageUtils.disconnectGoogleApiClient(googleApiClient);
+                        if (getActivity() != null) {
+                            NavUtils.showProgressOrFailure(getActivity(), MessageUtils.FAILURE, commandRequest.getId());
+                        }
                     }
                 });
     }

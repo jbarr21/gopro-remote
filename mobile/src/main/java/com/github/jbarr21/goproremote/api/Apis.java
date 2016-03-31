@@ -4,6 +4,8 @@ import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.github.jbarr21.goproremote.BuildConfig;
 import com.github.jbarr21.goproremote.GoProRemoteApp;
 import com.github.jbarr21.goproremote.data.ConfigStorage;
+import com.github.jbarr21.goproremote.util.CurlLoggingInterceptor;
+
 import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -15,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import rx.schedulers.Schedulers;
 
 public final class Apis {
 
@@ -52,6 +55,7 @@ public final class Apis {
                     //.cookieJar(CookieHandler.getDefault())
                     .addInterceptor(signingInterceptor)
                     .addInterceptor(loggingInterceptor)
+                    .addInterceptor(new CurlLoggingInterceptor())
                     .addNetworkInterceptor(new StethoInterceptor())
                     .build();
         }

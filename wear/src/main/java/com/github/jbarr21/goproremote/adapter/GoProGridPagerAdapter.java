@@ -59,7 +59,10 @@ public class GoProGridPagerAdapter extends FragmentGridPagerAdapter {
         this.status = status;
     }
 
-    private OnActionClickedListener wifiActionClickedListener = (appContext) -> {
-        appContext.sendBroadcast(WearNotificationManager.newConnectWifiIntent(appContext));
+    private OnActionClickedListener wifiActionClickedListener = new OnActionClickedListener() {
+        @Override
+        public void onActionClicked(Context appContext) {
+            appContext.sendBroadcast(WearNotificationManager.newConnectWifiIntent(appContext));
+        }
     };
 }

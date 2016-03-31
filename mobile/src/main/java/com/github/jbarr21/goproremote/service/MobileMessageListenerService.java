@@ -18,14 +18,11 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.google.gson.Gson;
-import com.twotoasters.servos.util.StreamUtils;
 
-import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.adapter.rxjava.HttpException;
-import retrofit2.Response;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
@@ -68,12 +65,17 @@ public class MobileMessageListenerService extends WearableListenerService {
 
             switch (command) {
                 case CONNECT_WIFI:
-                    WifiUtils.addGoProWifiNetwork(this).subscribe();
+                    WifiUtils.addGoProWifiNetwork(this)
+                            .subscribe(
+                                    it -> Timber.d("Successfully connected to WiFi"),
+                                    e -> Timber.e(e, "Error connecting to WiFi"));
                     break;
                 case GET_STATE:
                     GoProUtils.fetchCameraState(goProApi)
                             .subscribeOn(Schedulers.io())
-                            .subscribe(response -> Timber.d("success"), throwable -> Timber.e(throwable, "failure"));
+                            .subscribe(
+                                    response -> Timber.d("success"),
+                                    throwable -> Timber.e(throwable, "failure"));
                     break;
                 default:
                     Observable<Object> commandObservable = createGoProCommandObservable(command);
