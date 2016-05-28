@@ -22,16 +22,16 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".activity.HomeActivity">
+            android:name=".ui.HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <receiver android:name=".receiver.GoProNotificationCmdReceiver"/>
+        <receiver android:name=".data.service.MobileMessageListenerService$GoProNotificationCmdReceiver"/>
 
-        <service android:name=".service.MobileMessageListenerService">
+        <service android:name=".data.service.MobileMessageListenerService">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>

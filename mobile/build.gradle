@@ -26,7 +26,6 @@ android {
 
         proguardFiles 'proguard-rules.pro'
         proguardFiles '../proguard/proguard-butterknife.pro'
-        proguardFiles '../proguard/proguard-gson.pro'
         proguardFiles '../proguard/proguard-google-play-services.pro'
         proguardFiles '../proguard/proguard-retrolambda.pro'
         proguardFiles '../proguard/proguard-rx-java.pro'
@@ -68,8 +67,7 @@ dependencies {
     compile 'com.jakewharton.rxbinding:rxbinding:0.3.0'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
-    compile 'com.squareup.retrofit2:retrofit:2.0.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.0.0'
-    compile 'com.squareup.retrofit2:adapter-rxjava:2.0.0'
-    compile 'io.reactivex:rxandroid:1.1.0'
+    compile 'com.squareup.retrofit2:retrofit:2.0.2'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.0.2'
+    compile 'com.squareup.retrofit2:converter-moshi:2.0.2'
 }

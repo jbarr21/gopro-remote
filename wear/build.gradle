@@ -29,7 +29,6 @@ android {
         proguardFiles 'proguard-rules.pro'
         proguardFiles '../proguard/proguard-butterknife.pro'
         proguardFiles '../proguard/proguard-google-play-services.pro'
-        proguardFiles '../proguard/proguard-gson.pro'
         proguardFiles '../proguard/proguard-retrolambda.pro'
         proguardFiles '../proguard/proguard-rx-java.pro'
         proguardFiles '../proguard/proguard-square-otto.pro'
