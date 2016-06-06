@@ -8,7 +8,7 @@
     android:background="#88000000"
     android:indeterminate="true"
     android:keepScreenOn="true"
-    app:cpb_color="@color/wear_notification_action"
+    app:cpb_color="#0000FF"
     app:cpb_rotation_speed="1.0"
     app:cpb_sweep_speed="1.0"
     app:cpb_stroke_width="4dp"

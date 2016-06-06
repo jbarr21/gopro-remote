@@ -18,8 +18,9 @@ import java.net.ConnectException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
 import rx.Observable;
-import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
@@ -28,41 +29,30 @@ import static com.github.jbarr21.goproremote.common.data.Constants.GO_PRO_COMMAN
 import static com.github.jbarr21.goproremote.common.data.Constants.WEARABLE_CONN_TIMEOUT_MILLIS;
 
 public class MessageUtils {
-
     public static final boolean SUCCESS = true;
     public static final boolean FAILURE = false;
 
-    private static final Moshi MOSHI = Parser.getMoshi();
+    private Moshi moshi;
 
-    private MessageUtils() { }
+    @Inject
+    public MessageUtils(Moshi moshi) {
+        this.moshi = moshi;
+    }
 
-    public static Observable<Integer> sendGoProCommandMessage(@NonNull final GoogleApiClient googleApiClient, final GoProCommandRequest commandRequest) {
+    public Observable<Integer> sendGoProCommandMessage(@NonNull final GoogleApiClient googleApiClient, final GoProCommandRequest commandRequest) {
         return connectGoogleApiClient(googleApiClient)
-                .flatMap(new Func1<ConnectionResult, Observable<String>>() {
-                    @Override
-                    public Observable<String> call(ConnectionResult connectionResult) {
-                        return fetchPeerId(googleApiClient);
-                    }
-                })
-                .flatMap(new Func1<String, Observable<Integer>>() {
-                    @Override
-                    public Observable<Integer> call(String peerId) {
-                        return sendCommandRequest(googleApiClient, peerId, commandRequest);
-                    }
-                })
+                .flatMap((Func1<ConnectionResult, Observable<String>>) connectionResult -> fetchPeerId(googleApiClient))
+                .flatMap((Func1<String, Observable<Integer>>) peerId -> sendCommandRequest(googleApiClient, peerId, commandRequest))
                 .subscribeOn(Schedulers.newThread());
     }
 
     private static Observable<ConnectionResult> connectGoogleApiClient(final GoogleApiClient googleApiClient) {
-        return Observable.defer(new Func0<Observable<ConnectionResult>>() {
-            @Override
-            public Observable<ConnectionResult> call() {
-                ConnectionResult connectionResult = googleApiClient.blockingConnect(WEARABLE_CONN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-                if (connectionResult != null && connectionResult.isSuccess()) {
-                    return Observable.just(connectionResult);
-                } else {
-                    return Observable.error(new ConnectException(connectionResult != null ? connectionResult.toString() : "Failed to connect to Google API client"));
-                }
+        return Observable.defer(() -> {
+            ConnectionResult connectionResult = googleApiClient.blockingConnect(WEARABLE_CONN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            if (connectionResult != null && connectionResult.isSuccess()) {
+                return Observable.just(connectionResult);
+            } else {
+                return Observable.error(new ConnectException(connectionResult != null ? connectionResult.toString() : "Failed to connect to Google API client"));
             }
         });
     }
@@ -75,10 +65,10 @@ public class MessageUtils {
             : Observable.<String>error(new IllegalStateException("Unable to fetch peer id"));
     }
 
-    private static Observable<Integer> sendCommandRequest(GoogleApiClient googleApiClient, String peerId, GoProCommandRequest commandRequest) {
+    private Observable<Integer> sendCommandRequest(GoogleApiClient googleApiClient, String peerId, GoProCommandRequest commandRequest) {
         ensureGoogleApiClientConnected(googleApiClient);
         Timber.d("connectGoogleApiClient - sendCommandRequest? %b", Looper.myLooper() == Looper.getMainLooper());
-        byte[] data = MOSHI.adapter(GoProCommandRequest.class).toJson(commandRequest).getBytes();
+        byte[] data = moshi.adapter(GoProCommandRequest.class).toJson(commandRequest).getBytes();
         int requestId = Wearable.MessageApi
                 .sendMessage(googleApiClient, peerId, Constants.COMMAND_REQUEST_PATH, data)
                 .await(GO_PRO_COMMAND_TIMEOUT_SEC, TimeUnit.SECONDS)
@@ -91,10 +81,10 @@ public class MessageUtils {
                 : Observable.<Integer>error(new Exception("Unable to send command message"));
     }
 
-    public static Observable<Integer> sendGoProCommandResponse(GoogleApiClient googleApiClient, String peerId, GoProCommandResponse response) {
+    public Observable<Integer> sendGoProCommandResponse(GoogleApiClient googleApiClient, String peerId, GoProCommandResponse response) {
         ensureGoogleApiClientConnected(googleApiClient);
         Timber.d("connectGoogleApiClient - sendCommandRequest? %b", Looper.myLooper() == Looper.getMainLooper());
-        byte[] data = MOSHI.adapter(GoProCommandResponse.class).toJson(response).getBytes();
+        byte[] data = moshi.adapter(GoProCommandResponse.class).toJson(response).getBytes();
         int responseRequestId = Wearable.MessageApi
                 .sendMessage(googleApiClient, peerId, Constants.COMMAND_RESPONSE_PATH, data)
                 .await(GO_PRO_COMMAND_TIMEOUT_SEC, TimeUnit.SECONDS)

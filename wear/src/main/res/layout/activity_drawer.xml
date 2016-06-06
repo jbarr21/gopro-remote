@@ -1,0 +1,40 @@
+<android.support.wearable.view.drawer.WearableDrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.main.DrawerActivity"
+    tools:deviceIds="wear">
+
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:text="Initial"/>
+
+    </FrameLayout>
+
+    <android.support.wearable.view.drawer.WearableNavigationDrawer
+        android:id="@+id/nav_drawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="top"
+        android:background="@color/drawer_bg"/>
+
+    <android.support.wearable.view.drawer.WearableActionDrawer
+        android:id="@+id/action_drawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom"
+        android:background="@color/drawer_bg"/>
+
+</android.support.wearable.view.drawer.WearableDrawerLayout>

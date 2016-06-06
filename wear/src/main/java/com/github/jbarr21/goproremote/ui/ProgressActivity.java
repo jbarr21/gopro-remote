@@ -8,12 +8,15 @@ import android.support.wearable.activity.ConfirmationActivity;
 import android.text.TextUtils;
 import android.widget.Toast;
 
+import com.github.jbarr21.goproremote.GoProRemoteApp;
 import com.github.jbarr21.goproremote.R;
 import com.github.jbarr21.goproremote.common.data.GoProCommandResponse;
 import com.github.jbarr21.goproremote.common.utils.RxEventBus;
 import com.github.jbarr21.goproremote.common.utils.RxUtils;
 
 import java.util.concurrent.TimeoutException;
+
+import javax.inject.Inject;
 
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -28,6 +31,8 @@ public class ProgressActivity extends GoProActivity {
 
     private static final int REQUEST_CODE_PROGRESS = 0;
     private static final int REQUEST_CODE_RESULT = 1;
+
+    @Inject RxEventBus bus;
 
     private long requestId;
     private Subscription sub;
@@ -71,10 +76,11 @@ public class ProgressActivity extends GoProActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        GoProRemoteApp.getComponent().inject(this);
         setContentView(R.layout.activity_progress);
         requestId = getIntent().getLongExtra(EXTRA_COMMAND_REQUEST_ID, 0);
 
-        sub = RxEventBus.events(GoProCommandResponseEvent.class)
+        sub = bus.events(GoProCommandResponseEvent.class)
                 .filter(new Func1<GoProCommandResponseEvent, Boolean>() {
                     @Override
                     public Boolean call(GoProCommandResponseEvent event) {

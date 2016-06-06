@@ -13,17 +13,4 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>
     </style>
-
-    <style name="ControlQuadrantBackground">
-        <item name="android:layout_width">@dimen/control_quadrant_size</item>
-        <item name="android:layout_height">@dimen/control_quadrant_size</item>
-        <item name="android:background">@drawable/ripple</item>
-        <item name="android:stateListAnimator">@anim/raise</item>
-    </style>
-
-    <style name="ControlQuadrantIcon">
-        <item name="android:layout_width">@dimen/control_quadrant_icon_size</item>
-        <item name="android:layout_height">@dimen/control_quadrant_icon_size</item>
-        <item name="android:layout_margin">@dimen/control_quadrant_icon_margin</item>
-    </style>
 </resources>

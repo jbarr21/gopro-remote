@@ -1,14 +1,11 @@
 package com.github.jbarr21.goproremote.ui;
 
-import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
@@ -27,22 +24,24 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import com.f2prateek.rx.receivers.RxBroadcastReceiver;
+import com.github.jbarr21.goproremote.GoProRemoteApp;
 import com.github.jbarr21.goproremote.R;
 import com.github.jbarr21.goproremote.common.data.GoProMode;
 import com.github.jbarr21.goproremote.common.data.GoProState;
+import com.github.jbarr21.goproremote.common.data.api.GoProApi;
+import com.github.jbarr21.goproremote.common.data.api.GoProUtils;
+import com.github.jbarr21.goproremote.common.data.storage.ConfigStorage;
 import com.github.jbarr21.goproremote.common.utils.GoProStateParser;
 import com.github.jbarr21.goproremote.common.utils.RxUtils;
-import com.github.jbarr21.goproremote.data.api.Apis;
-import com.github.jbarr21.goproremote.data.api.GoProApi;
-import com.github.jbarr21.goproremote.data.api.GoProUtils;
-import com.github.jbarr21.goproremote.data.network.WifiUtils;
-import com.github.jbarr21.goproremote.data.storage.ConfigStorage;
+import com.github.jbarr21.goproremote.common.utils.WifiUtils;
 import com.twotoasters.servos.util.butterknife.EnabledSetter;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -55,7 +54,7 @@ import rx.Subscription;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
-import static com.github.jbarr21.goproremote.ui.ViewUtils.tintedImage;
+import static com.github.jbarr21.goproremote.common.utils.ViewUtils.tintedImage;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -75,36 +74,33 @@ public class HomeActivity extends AppCompatActivity {
 
     private HashMap<Integer, GoProMode> radioButtonToModeMap;
 
-    private GoProNotificationManager notificationManager;
-    private ConfigStorage configStorage;
+    @Inject ConfigStorage configStorage;
+    @Inject GoProApi goProApi;
+
     private Subscription wifiChangedSubscription;
-    private GoProApi goProApi;
     private GoProMode mode;
     private boolean isRecording;
     private boolean isPasswordVisible;
 
-    private Network goProNetwork;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        GoProRemoteApp.getComponent().inject(this);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
         setContentView(R.layout.activity_home);
 
-        notificationManager = GoProNotificationManager.from(this);
-        configStorage = new ConfigStorage(this);
         mode = GoProMode.VIDEO;
         isRecording = false;
 
         setupViews(this);
 
         if (WifiUtils.isConnectedToGoProWifi(this)) {
-            bindProcessToNetwork((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE));
+            // re-inject to update OkHttpClient
+            GoProRemoteApp.getComponent().inject(this);
         } else {
             connectToGoProWifi();
         }
 
-        goProApi = Apis.getGoProApi();
         updateCameraCurrentState();
 
         // TODO: move to show when WiFi connects and hide when disconnect
@@ -217,7 +213,12 @@ public class HomeActivity extends AppCompatActivity {
                 .doOnNext(networkInfo -> Timber.i("Network state is %s [isConnected = %b]", networkInfo.getState(), networkInfo.isConnected()))
                 .filter(networkInfo -> networkInfo.isConnected())
                 .first()
-                .doOnNext(networkInfo -> bindProcessToNetwork((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)))
+                .doOnNext(it -> {
+                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                        // re-inject to update OkHttpClient
+                        GoProRemoteApp.getComponent().inject(this);
+                    }
+                })
                 .timeout(10, TimeUnit.SECONDS)
                 .subscribe(intent -> {
                     showSnackbar(Snackbar.make(coordinator, String.format("Connected to %s", configStorage.getWifiSsid()), Snackbar.LENGTH_SHORT));
@@ -227,19 +228,6 @@ public class HomeActivity extends AppCompatActivity {
                             .setAction("Retry", view -> connectToGoProWifi())
                             .setActionTextColor(getResources().getColor(android.R.color.holo_red_light)));
                 });
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
-    public void bindProcessToNetwork(ConnectivityManager connectivityManager) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Observable.from(connectivityManager.getAllNetworks())
-                    .doOnNext(network -> goProNetwork = network)
-                    .map(network -> connectivityManager.getNetworkInfo(network))
-                    .filter(networkInfo -> networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo.isConnected())
-                    .toBlocking()
-                    .first();
-            Apis.setOkHttpClient(Apis.getOkHttpClient().newBuilder().socketFactory(goProNetwork.getSocketFactory()).build());
-        }
     }
 
     @Override

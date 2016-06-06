@@ -1,0 +1,15 @@
+<android.support.wearable.view.DotsPageIndicator
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_drawer_indicator"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="1.333dp"
+    android:layout_gravity="center_horizontal|bottom"
+    app:dotRadius="2dp"
+    app:dotRadiusSelected="3.333dp"
+    app:dotShadowRadius="0.5dp"
+    app:dotShadowDx="0dp"
+    app:dotShadowDy="2dp"
+    app:dotSpacing="8dp"
+    app:dotFadeWhenIdle="false"/>

@@ -10,7 +10,7 @@ import com.google.android.gms.wearable.Wearable;
 
 import butterknife.ButterKnife;
 
-public abstract class BaseFragment extends Fragment {
+public abstract class BaseFragment extends Fragment implements AmbientModeChangedListener {
 
     protected Context appContext;
     protected GoogleApiClient googleApiClient;
@@ -35,5 +35,15 @@ public abstract class BaseFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         ButterKnife.unbind(this);
+    }
+
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        // no op
+    }
+
+    @Override
+    public void onExitAmbient() {
+        // no op
     }
 }

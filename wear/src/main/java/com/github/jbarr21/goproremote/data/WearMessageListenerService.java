@@ -1,10 +1,9 @@
 package com.github.jbarr21.goproremote.data;
 
+import com.github.jbarr21.goproremote.GoProRemoteApp;
 import com.github.jbarr21.goproremote.common.data.Constants;
 import com.github.jbarr21.goproremote.common.data.GoProCommandResponse;
-import com.github.jbarr21.goproremote.common.utils.Parser;
 import com.github.jbarr21.goproremote.common.utils.RxEventBus;
-import com.github.jbarr21.goproremote.common.utils.RxEventBus.Bus;
 import com.github.jbarr21.goproremote.ui.ProgressActivity.GoProCommandResponseEvent;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
@@ -12,18 +11,19 @@ import com.squareup.moshi.Moshi;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import timber.log.Timber;
 
 public class WearMessageListenerService extends WearableListenerService {
 
-    private Moshi moshi;
-    private Bus bus;
+    @Inject Moshi moshi;
+    @Inject RxEventBus bus;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        moshi = Parser.getMoshi();
-        bus = RxEventBus.get();
+        GoProRemoteApp.getComponent().inject(this);
     }
 
     @Override

@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="wl_circle_centered">@color/wear_notification_action</color>
-    <color name="wl_text_centered">@android:color/black</color>
+    <!-- Wear 2.0 color palette -->
+    <color name="app_color">#2196FE</color>
+    <color name="accent">#80C6FF</color>
+    <color name="lighter_ui_element">#1766A6</color>
+    <color name="ui_element">#0E3F66</color>
+    <color name="lighter_bg">#002A4D</color>
+    <color name="dark_bg">#001526</color>
 
-    <color name="window_bg">@color/control_bg</color>
-    <color name="mode_bg">#424242</color><!-- same as wear settings bg -->
-    <color name="control_bg">#bdbdbd</color><!-- same color as stream notification card -->
-    <color name="control_bg_ripple">#dddddd</color>
-    <color name="wear_notification_peek_action">#2979ff</color>
-    <color name="wear_notification_action">#0288d1</color>
-    <color name="wear_notification_action_pressed">#01579b</color>
-    <color name="wear_google_now_circle">#e51c23</color>
+    <color name="window_bg">@color/lighter_bg</color>
+    <color name="drawer_bg">@color/lighter_ui_element</color>
 </resources>

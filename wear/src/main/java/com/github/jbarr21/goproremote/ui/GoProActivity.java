@@ -1,7 +1,7 @@
 package com.github.jbarr21.goproremote.ui;
 
-import com.trello.rxlifecycle.components.RxActivity;
+import android.support.wearable.activity.WearableActivity;
 
-public class GoProActivity extends RxActivity {
+public class GoProActivity extends WearableActivity {
     // no op
 }

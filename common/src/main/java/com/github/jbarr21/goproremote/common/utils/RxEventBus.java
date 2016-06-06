@@ -3,50 +3,23 @@ package com.github.jbarr21.goproremote.common.utils;
 import rx.Observable;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
-import rx.subjects.Subject;
 
 public class RxEventBus {
-    private static final Bus BUS = new Bus(PublishSubject.create());
+    private SerializedSubject bus = new SerializedSubject(PublishSubject.create());
 
-    public static void post(Object o) {
-        BUS.onNext(o);
+    public void post(Object o) {
+        bus.onNext(o);
     }
 
-    public static <T> Observable<T> events(Class<T> klass) {
-        return BUS.events(klass);
+    public <T> Observable<T> events(Class<T> klass) {
+        return bus.asObservable().ofType(klass);
     }
 
-    public static Observable events() {
-        return BUS.asObservable();
+    public Observable events() {
+        return bus.asObservable();
     }
 
-    public static boolean hasObservers() {
-        return BUS.hasObservers();
-    }
-
-    public static Bus get() {
-        return BUS;
-    }
-
-    public static class Bus extends SerializedSubject<Object, Object> {
-        public Bus(Subject<Object, Object> actual) {
-            super(actual);
-        }
-
-        public void post(Object o) {
-            onNext(o);
-        }
-
-        public <T> Observable<T> events(Class<T> klass) {
-            return events().ofType(klass);
-        }
-
-        public Observable events() {
-            return asObservable();
-        }
-
-        public boolean hasObservers() {
-            return hasObservers();
-        }
+    public boolean hasObservers() {
+        return bus.hasObservers();
     }
 }
